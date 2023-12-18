@@ -4,6 +4,10 @@
 #ifndef USER_INTERFACE_H
 #define USER_INTERFACE_H
 
-// function declarations for user_interface.c
+int main_menu(int allowed_attempts);
+void main_menu_text(int allowed_attempts);
+int validate_choice(char *input, int max_value);
+void clear_input_buffer(char *input);
+void clear_screen();
 
 #endif
