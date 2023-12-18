@@ -8,19 +8,19 @@
 
 int main_menu(int allowed_attempts) {
     char input[4];
-    int choice;
+    int choice, max_choice = 5;
     if(allowed_attempts < 1) {
         printf("Too many invalid choices. ");
-        return 5;
+        return max_choice;
     }
-    main_menu_text(allowed_attempts);
+    main_menu_interface(allowed_attempts);
     fgets(input, sizeof(input), stdin);
-    choice = validate_choice(input, 5);
+    choice = validate_choice(input, max_choice);
     if(choice == 0) return main_menu(--allowed_attempts);
     return choice;
 }
 
-void main_menu_text(int allowed_attempts) {
+void main_menu_interface(int allowed_attempts) {
     clear_screen();
     printf("Welcome to Sudoku!\n");
     printf("Please choose one of the following options:\n");

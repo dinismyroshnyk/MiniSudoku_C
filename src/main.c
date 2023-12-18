@@ -36,6 +36,7 @@ void main_loop() {
 }
 
 int main() {
+    generate_data_file();
     main_loop();
     return 0;
 }

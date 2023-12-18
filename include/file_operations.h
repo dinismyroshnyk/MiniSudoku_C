@@ -4,6 +4,6 @@
 #ifndef FILE_OPERATIONS_H
 #define FILE_OPERATIONS_H
 
-// function declarations for file_operations.c
+void generate_data_file();
 
 #endif
