@@ -1,3 +1,9 @@
+# .vscode folder
+**/.vscode/
+
+# pdf files
+**/*.pdf
+
 # Prerequisites
 *.d
 
