@@ -15,7 +15,7 @@ int main_menu(int allowed_attempts) {
     }
     main_menu_interface(allowed_attempts);
     fgets(input, sizeof(input), stdin);
-    choice = validate_choice(input, max_choice);
+    choice = validate_user_input(input, max_choice);
     if(choice == 0) return main_menu(--allowed_attempts);
     return choice;
 }
@@ -34,7 +34,15 @@ void main_menu_interface(int allowed_attempts) {
     else printf("Your choice: ");
 }
 
-int validate_choice(char *input, int max_value) {
+//void display_sudoku_grid() {
+//    
+//}
+//
+//void get_grid_position(int *row, int *column) {
+//    
+//}
+
+int validate_user_input(char *input, int max_value) {
     int integer;
     char newline;
     if(sscanf(input, "%d%c", &integer, &newline) != 2 || newline != '\n') {

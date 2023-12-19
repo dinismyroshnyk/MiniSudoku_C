@@ -4,6 +4,12 @@
 #ifndef FILE_OPERATIONS_H
 #define FILE_OPERATIONS_H
 
-void generate_data_file();
+#include "sudoku.h"
+
+void generate_data_file(); // DONE
+void validate_data_file();
+char *trim(char *str);
+int count_problems();
+void load_problems(SudokuProblem problems[]);
 
 #endif

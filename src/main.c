@@ -14,7 +14,7 @@ void main_loop() {
         int choice = main_menu(max_recursion_depth);
         switch(choice) {
             case 1:
-                // implement play_sudoku function
+                //play_sudoku();
                 break;
             case 2:
                 // implement add_new_problem function
@@ -36,7 +36,10 @@ void main_loop() {
 }
 
 int main() {
+    //SudokuProblem problems[MAX_PROBLEMS];
     generate_data_file();
-    main_loop();
+    validate_data_file();
+    //load_problems(problems);
+    //main_loop();
     return 0;
 }

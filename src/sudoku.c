@@ -3,8 +3,14 @@
 
 #include "../include/sudoku.h"
 
-// unnused dummy function to avoid compilation warnings
-#pragma GCC diagnostic ignored "-Wunused-function"
-static void dummy_function() {}
-
-// function definitions here
+//void play_sudoku() {
+//    
+//}
+//
+//void select_random_problem() {
+//    
+//}
+//
+//int validate_move(int row, int column, int value) {
+//    
+//}
