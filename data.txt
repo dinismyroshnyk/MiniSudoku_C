@@ -1,15 +1,27 @@
 // this is a comment, it will be ignored by the program
+    
+      
+       
 
-0 0 0.0 // total number of games played, number of games won, success rate
+         
 
-"Hardcoded Problem 1" 0 // name of the problem, times played this problem
-2 0 3 0
-0 3 0 2
-3 0 4 0
-1 4 0 0
+     // this is a comment, it will be ignored by the program
+6 5 83.33  // total number of games played, number of games won, success rate
 
-"Hardcoded Problem 2" 0
+
+
+"Hardcoded Problem 1" 3 // name of the problem, times played this problem
+  2 0 3 0
+     0 3 0 2 // this is a comment, it will be ignored by the program
+          3 0 4 0
+ 1 4 0 0 // this is a comment, it will be ignored by the program
+  
+
+                  "Hardcoded Problem 2" 4
 4 3 0 1
-0 0 3 0
+0 0 3  0 // this is a comment, it will be ignored by the program
 0 4 0 3
 3 0 4 0
+ 
+
+   
