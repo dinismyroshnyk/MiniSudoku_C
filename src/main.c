@@ -8,7 +8,13 @@
 
 #include <stdio.h>
 
-void main_loop() {
+void add_new_problem(FileData *data) {
+    get_unique_problem_name(data);
+    get_sudoku_grid();
+    write_problem_to_file();
+}
+
+void main_loop(FileData *data) {
     while(1) {
         const int max_recursion_depth = 5;
         int choice = main_menu(max_recursion_depth);
@@ -17,7 +23,7 @@ void main_loop() {
                 //play_sudoku();
                 break;
             case 2:
-                // implement add_new_problem function
+                add_new_problem(data);
                 break;
             case 3:
                 // implement rename_problem function
@@ -36,10 +42,8 @@ void main_loop() {
 }
 
 int main() {
-    //SudokuProblem problems[MAX_PROBLEMS];
     generate_data_file();
-    validate_data_file();
-    //load_problems(problems);
-    //main_loop();
+    FileData data = validate_data_file();
+    main_loop(&data);
     return 0;
 }

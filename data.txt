@@ -10,7 +10,7 @@
 
 
 
-"Hardcoded Problem 1" 3 // name of the problem, times played this problem
+"Hardcoded Problem 1" 2 // name of the problem, times played this problem
   2 0 3 0
      0 3 0 2 // this is a comment, it will be ignored by the program
           3 0 4 0
@@ -25,3 +25,8 @@
  
 
    
+//"Hardcoded Problem 3" 1 // impossible problem
+//4 3 2 1
+//2 1 3 4
+//1 4 0 3
+//3 2 4 0

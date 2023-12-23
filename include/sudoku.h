@@ -4,17 +4,17 @@
 #ifndef SUDOKU_H
 #define SUDOKU_H
 
-#define MAX_PROBLEMS 100
-#define GRID_SIZE 4
+#include <constants.h>
 
 typedef struct {
-    char name[50];
-    int times_played;
+    char name[USER_BUFFER];
+    int times_played_total, times_played_session;
     int grid[GRID_SIZE][GRID_SIZE];
 } SudokuProblem;
 
-void play_sudoku();
-void select_random_problem();
-int validate_move(int row, int column, int value);
+int is_valid(int grid[GRID_SIZE][GRID_SIZE], int row, int col, int num);
+int solve_sudoku(int grid[GRID_SIZE][GRID_SIZE], int row, int col);
+int is_initial_grid_valid(int grid[GRID_SIZE][GRID_SIZE]);
+int check_cell(int grid[GRID_SIZE][GRID_SIZE], int row, int col);
 
 #endif

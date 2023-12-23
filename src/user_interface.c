@@ -2,6 +2,7 @@
 // description: Contains the functions that handle the user interface
 
 #include "../include/user_interface.h"
+#include "../include/file_operations.h"
 
 # include <stdio.h>
 # include <string.h>
@@ -34,14 +35,6 @@ void main_menu_interface(int allowed_attempts) {
     else printf("Your choice: ");
 }
 
-//void display_sudoku_grid() {
-//    
-//}
-//
-//void get_grid_position(int *row, int *column) {
-//    
-//}
-
 int validate_user_input(char *input, int max_value) {
     int integer;
     char newline;
@@ -64,4 +57,14 @@ void clear_input_buffer(char *input) {
 
 void clear_screen() {
     printf("\033[H\033[J");
+}
+
+void get_unique_problem_name(FileData *data) {
+    char problem_name[USER_BUFFER];
+    while(1) {
+        printf("Please enter a unique name for the problem: ");
+        fgets(problem_name, sizeof(problem_name), stdin);
+        if(problem_name[strlen(problem_name) - 1] != '\n') problem_name[strlen(problem_name) - 1] = '\0';
+        validate_problem_name(data, problem_name, 0);
+    }
 }

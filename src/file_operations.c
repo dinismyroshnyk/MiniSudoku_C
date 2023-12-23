@@ -63,19 +63,20 @@ void generate_data_file() {
     }
 }
 
-void validate_data_file() {
-    FileData data = init_file_context("../data.txt");
+FileData validate_data_file() {
+    FileData data = init_file_data("../data.txt");
     validate_statistics(&data);
     validate_problems(&data);
     validate_problem_count(&data);
     fclose(data.file);
+    return data;
 }
 
 void validate_statistics(FileData *data) {
     char buffer[FILE_BUFFER];
     char *trimmed = read_line(data, buffer, sizeof(buffer));
     int extra, decimal_part;
-    printf("Debug: Game statistics line after removing comments and trimming: '%s'\n", trimmed);
+    //printf("Debug: Game statistics line after removing comments and trimming: '%s'\n", trimmed);
     if(sscanf(trimmed, "%d %d %d.%d%n", &(data->games_played), &(data->games_won), &(data->success_rate), &decimal_part, &extra) != 4 || trimmed[extra] != '\0') {
         exit_error_message(data, "Invalid game statistics line.", -1, NULL);
     }
@@ -84,35 +85,37 @@ void validate_statistics(FileData *data) {
     check_int_range(data, data->games_played, INT_MAX, "Number of games played is less than 0.");
     check_int_range(data, data->games_won, data->games_played, "Number of games won is less than 0 or greater than number of games played.");
     check_success_rate(data, data->success_rate, 10000, "Success rate is less than 0 or greater than 100.");
-    printf("Debug: Games played: %d, Games won: %d, Success rate: %.2f\n", data->games_played, data->games_won, (float)(data->success_rate) / 100);
+    //printf("Debug: Games played: %d, Games won: %d, Success rate: %.2f\n", data->games_played, data->games_won, (float)(data->success_rate) / 100);
 }
 
-void validate_problem_grid(FileData *data, int grid[GRID_SIZE]) {
+void validate_problem_grid(FileData *data, int grid[GRID_SIZE][GRID_SIZE]) {
     char buffer[FILE_BUFFER];
     for(int i = 0; i < GRID_SIZE; i++) {
         char *trimmed = read_line(data, buffer, sizeof(buffer));
         int extra;
-        printf("Debug: Grid line after removing comments and trimming: '%s'\n", trimmed);
-        if(sscanf(trimmed, "%d %d %d %d%n", &grid[0], &grid[1], &grid[2], &grid[3], &extra) != 4 ||trimmed[extra] != '\0') {
+        //printf("Debug: Grid line after removing comments and trimming: '%s'\n", trimmed);
+        if(sscanf(trimmed, "%d %d %d %d%n", &grid[i][0], &grid[i][1], &grid[i][2], &grid[i][3], &extra) != 4 ||trimmed[extra] != '\0') {
             exit_error_message(data, "Invalid grid line.", -1, NULL);
         }
-        for(int j = 0; j < GRID_SIZE; j++) check_int_range(data, grid[j], GRID_SIZE, "Invalid grid value.");
-        printf("Debug: Grid values: %d, %d, %d, %d\n", grid[0], grid[1], grid[2], grid[3]);
+        for(int j = 0; j < GRID_SIZE; j++) check_int_range(data, grid[i][j], GRID_SIZE, "Invalid grid value.");
+        //printf("Debug: Grid values: %d, %d, %d, %d\n", grid[i][0], grid[i][1], grid[i][2], grid[i][3]);
     }
 }
 
 void validate_problems(FileData *data) {
     char buffer[FILE_BUFFER], problem_name[USER_BUFFER], *trimmed;
-    int times_played, grid[GRID_SIZE], games_played_across_problems = 0;
+    int times_played, grid[GRID_SIZE][GRID_SIZE], games_played_across_problems = 0;
     while((trimmed = read_line(data, buffer, sizeof(buffer))) != NULL) {
-        printf("Debug: Problem line after removing comments and trimming: '%s'\n", trimmed);
+        //printf("Debug: Problem line after removing comments and trimming: '%s'\n", trimmed);
         if (sscanf(trimmed, "\"%[^\"]\" %d", problem_name, &times_played) != 2 || times_played < 0) {
             exit_error_message(data, "Invalid problem line.", -1, NULL);
         }
-        printf("Debug: Problem name: '%s', Times played: %d\n", problem_name, times_played);
+        validate_problem_name(data, problem_name, 1);
+        //printf("Debug: Problem name: '%s', Times played: %d\n", problem_name, times_played);
         validate_problem_grid(data, grid);
+        validate_sudoku_problem(data, grid);
+        add_problem_to_data(data, problem_name, times_played, grid);
         games_played_across_problems += times_played;
-        data->problem_count++;
     }
     validate_total_games_across_problems(data, games_played_across_problems);
 }
@@ -129,7 +132,8 @@ char *trim(char *str) {
 
 void exit_error_message(FileData *data, const char *message, int print_check, int extra_values[2]) {
     if(print_check == -1) printf("Error on line %d: %s\n", data->line_number, message);
-    else if(print_check == -2) {
+    else if(print_check == -2) printf("%s starting on line %d.\n", message, data->line_number - 4);
+    else if(print_check == -3) {
         if(extra_values[0] < extra_values[1]) {
             printf("%s", message);
             printf(" Expected %d at most ", extra_values[0]);
@@ -146,7 +150,7 @@ void exit_error_message(FileData *data, const char *message, int print_check, in
     exit(1);
 }
 
-FileData init_file_context(const char *filename) {
+FileData init_file_data(const char *filename) {
     FileData data;
     data.file = open_file(filename, "r");
     data.line_number = data.games_played = data.games_won = data.success_rate = 0;
@@ -156,21 +160,39 @@ FileData init_file_context(const char *filename) {
 void validate_problem_count(FileData *data) {
     if(data->problem_count > MAX_PROBLEMS) {
         int extra_values[2] = {MAX_PROBLEMS, data->problem_count};
-        exit_error_message(data, "Maximum number of problems exceeded.", -2, extra_values);
+        exit_error_message(data, "Maximum number of problems exceeded.", -3, extra_values);
     }
 }
 
 void validate_total_games_across_problems(FileData *data, int games_played_across_problems) {
     if(data->games_played != games_played_across_problems) {
         int extra_values[2] = {data->games_played, games_played_across_problems};
-        exit_error_message(data, "Mismatching total number of games played.", -2, extra_values);
+        exit_error_message(data, "Mismatching total number of games played.", -3, extra_values);
     }
 }
 
-//int count_problems() {
-//    
-//}
-//
-//void load_problems(SudokuProblem problems[]) {
-//    
-//}
+void validate_sudoku_problem(FileData *data, int grid[GRID_SIZE][GRID_SIZE]) {
+    if (!is_initial_grid_valid(grid) || !solve_sudoku(grid, 0, 0)) {
+        exit_error_message(data, "Invalid Sudoku puzzle", -2, NULL);
+    }
+}
+
+void validate_problem_name(FileData *data, char *problem_name, int exit_flag) {
+    for(int i = 0; i < data->problem_count; i++) {
+        if(strcmp(problem_name, data->problems[i].name) == 0) {
+            if(exit_flag) exit_error_message(data, "Duplicate problem name.", -1, NULL);
+            else {
+                printf("The problem name is already in use. Please choose another name.\n");
+                return;
+            }
+        }
+    }
+    strcpy(data->problems[data->problem_count].name, problem_name);
+}
+
+void add_problem_to_data(FileData *data, char *problem_name, int times_played, int grid[GRID_SIZE][GRID_SIZE]) {
+    data->problems[data->problem_count].times_played_total = times_played;
+    data->problems[data->problem_count].times_played_session = 0;
+    memcpy(data->problems[data->problem_count].grid, grid, sizeof(grid));
+    data->problem_count++;
+}

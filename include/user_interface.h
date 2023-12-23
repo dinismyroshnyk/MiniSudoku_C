@@ -4,14 +4,15 @@
 #ifndef USER_INTERFACE_H
 #define USER_INTERFACE_H
 
-int main_menu(int allowed_attempts); // DONE
-void main_menu_interface(int allowed_attempts); // DONE
+#include <file_operations.h>
 
-void display_sudoku_grid();
-void get_grid_position(int *row, int *column);
+int main_menu(int allowed_attempts);
+void main_menu_interface(int allowed_attempts);
 
-int validate_user_input(char *input, int max_value); // DONE
-void clear_input_buffer(char *input); // DONE
-void clear_screen(); // DONE
+int validate_user_input(char *input, int max_value);
+void clear_input_buffer(char *input);
+void clear_screen();
+
+void get_unique_problem_name(FileData *data);
 
 #endif
