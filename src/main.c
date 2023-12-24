@@ -1,6 +1,7 @@
 // name: António Dinis Myroshnyk
 // description: main file of the project containing the main loop
 
+#include "../include/constants.h"
 #include "../include/file_operations.h"
 #include "../include/sudoku.h"
 #include "../include/statistics.h"
@@ -10,14 +11,13 @@
 
 void add_new_problem(FileData *data) {
     get_unique_problem_name(data);
-    get_sudoku_grid();
-    write_problem_to_file();
+    get_sudoku_grid(data);
+    write_problem_to_file(data);
 }
 
 void main_loop(FileData *data) {
     while(1) {
-        const int max_recursion_depth = 5;
-        int choice = main_menu(max_recursion_depth);
+        int choice = main_menu(MAX_RECURSION_DEPTH);
         switch(choice) {
             case 1:
                 //play_sudoku();

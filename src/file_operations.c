@@ -114,7 +114,7 @@ void validate_problems(FileData *data) {
         //printf("Debug: Problem name: '%s', Times played: %d\n", problem_name, times_played);
         validate_problem_grid(data, grid);
         validate_sudoku_problem(data, grid);
-        add_problem_to_data(data, problem_name, times_played, grid);
+        add_problem_to_data(data, times_played, grid);
         games_played_across_problems += times_played;
     }
     validate_total_games_across_problems(data, games_played_across_problems);
@@ -172,27 +172,44 @@ void validate_total_games_across_problems(FileData *data, int games_played_acros
 }
 
 void validate_sudoku_problem(FileData *data, int grid[GRID_SIZE][GRID_SIZE]) {
-    if (!is_initial_grid_valid(grid) || !solve_sudoku(grid, 0, 0)) {
+    int copy[GRID_SIZE][GRID_SIZE];
+    memcpy(copy, grid, sizeof(int) * GRID_SIZE * GRID_SIZE);
+    if (!is_initial_grid_valid(copy) || !solve_sudoku(copy, 0, 0)) {
         exit_error_message(data, "Invalid Sudoku puzzle", -2, NULL);
     }
 }
 
-void validate_problem_name(FileData *data, char *problem_name, int exit_flag) {
+int validate_problem_name(FileData *data, char *problem_name, int exit_flag) {
     for(int i = 0; i < data->problem_count; i++) {
         if(strcmp(problem_name, data->problems[i].name) == 0) {
             if(exit_flag) exit_error_message(data, "Duplicate problem name.", -1, NULL);
             else {
                 printf("The problem name is already in use. Please choose another name.\n");
-                return;
+                return 0;
             }
         }
+        //printf("Debug: Problem name: '%s', Problem name in data: '%s'\n", problem_name, data->problems[i].name);
     }
     strcpy(data->problems[data->problem_count].name, problem_name);
+    return 1;
 }
 
-void add_problem_to_data(FileData *data, char *problem_name, int times_played, int grid[GRID_SIZE][GRID_SIZE]) {
+void add_problem_to_data(FileData *data, int times_played, int grid[GRID_SIZE][GRID_SIZE]) {
     data->problems[data->problem_count].times_played_total = times_played;
     data->problems[data->problem_count].times_played_session = 0;
-    memcpy(data->problems[data->problem_count].grid, grid, sizeof(grid));
+    memcpy(data->problems[data->problem_count].grid, grid, sizeof(int) * GRID_SIZE * GRID_SIZE);
     data->problem_count++;
+}
+
+void write_problem_to_file(FileData *data) {
+    FILE *file = open_file("../data.txt", "a");
+    fprintf(file, "\n\n\"%s\" %d\n", data->problems[data->problem_count - 1].name, data->problems[data->problem_count - 1].times_played_total);
+    for(int i = 0; i < GRID_SIZE; i++) {
+        for(int j = 0; j < GRID_SIZE; j++) {
+            fprintf(file, "%d", data->problems[data->problem_count - 1].grid[i][j]);
+            if (j < GRID_SIZE - 1) fprintf(file, " ");
+        }
+        if (i < GRID_SIZE - 1) fprintf(file, "\n");
+    }
+    fclose(file);
 }

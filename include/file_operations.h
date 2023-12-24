@@ -31,7 +31,8 @@ void validate_problem_count(FileData *data);
 void validate_total_games_across_problems(FileData *data, int games_played_across_problems);
 void validate_sudoku_problem(FileData *data, int grid[GRID_SIZE][GRID_SIZE]);
 char *trim(char *str);
-void validate_problem_name(FileData *data, char *problem_name, int exit_flag);
-void add_problem_to_data(FileData *data, char *problem_name, int times_played, int grid[GRID_SIZE][GRID_SIZE]);
+int validate_problem_name(FileData *data, char *problem_name, int exit_flag);
+void add_problem_to_data(FileData *data, int times_played, int grid[GRID_SIZE][GRID_SIZE]);
+void write_problem_to_file(FileData *data);
 
 #endif

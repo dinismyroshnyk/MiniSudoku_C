@@ -4,7 +4,7 @@
 #ifndef SUDOKU_H
 #define SUDOKU_H
 
-#include <constants.h>
+#include "constants.h"
 
 typedef struct {
     char name[USER_BUFFER];

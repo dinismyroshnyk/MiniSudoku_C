@@ -4,6 +4,8 @@
 #ifndef CONSTANTS_H
 #define CONSTANTS_H
 
+#define MAX_RECURSION_DEPTH 5
+
 #define FILE_BUFFER 256
 #define USER_BUFFER 40
 #define MIN_DATA_VALUE 0
