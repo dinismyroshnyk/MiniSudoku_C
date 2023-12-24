@@ -60,7 +60,7 @@ void clear_screen() {
     printf("\033[H\033[J");
 }
 
-void get_unique_problem_name(FileData *data) {
+void get_unique_problem_name(FileData *data, int index) {
     char problem_name[USER_BUFFER];
     while(1) {
         clear_screen();
@@ -68,8 +68,18 @@ void get_unique_problem_name(FileData *data) {
         fgets(problem_name, sizeof(problem_name), stdin);
         clear_input_buffer(problem_name);
         if(problem_name[strlen(problem_name) - 1] == '\n') problem_name[strlen(problem_name) - 1] = '\0';
-        if(validate_problem_name(data, problem_name, 0)) break;
+        if(validate_problem_name(data, problem_name, 0)) {
+            update_problem_name(data, problem_name, index);
+            break;
+        }
     }
+}
+
+void update_problem_name(FileData *data, char *problem_name, int index) {
+    if(index == -1) {
+        strcpy(data->problems[data->problem_count].name, problem_name);
+        data->problem_count++;
+    } else strcpy(data->problems[index].name, problem_name);
 }
 
 void get_sudoku_grid(FileData *data) {
@@ -101,4 +111,22 @@ int get_valid_cell(int row, int col) {
         if (value >= MIN_DATA_VALUE && value <= GRID_SIZE) break;
     }
     return value;
+}
+
+int get_problem_index(FileData *data) {
+    char problem_name[USER_BUFFER];
+    while(1) {
+        get_problem_name(problem_name, sizeof(problem_name));
+        for(int i = 0; i < data->problem_count; i++) {
+            if(strcmp(problem_name, data->problems[i].name) == 0) return i;
+        }
+        printf("The problem name is not in the list. Please try again.\n");
+    }
+}
+
+void get_problem_name(char *problem_name, int size) {
+    printf("Enter the name of the problem: ");
+    fgets(problem_name, size, stdin);
+    clear_input_buffer(problem_name);
+    if(problem_name[strlen(problem_name) - 1] == '\n') problem_name[strlen(problem_name) - 1] = '\0';
 }

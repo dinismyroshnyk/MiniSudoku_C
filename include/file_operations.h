@@ -16,7 +16,7 @@ typedef struct {
     SudokuProblem problems[MAX_PROBLEMS];
 } FileData;
 
-void generate_data_file(); // DONE
+void generate_data_file();
 FileData validate_data_file();
 void validate_statistics(FileData *data);
 void validate_problems(FileData *data);
@@ -34,5 +34,7 @@ char *trim(char *str);
 int validate_problem_name(FileData *data, char *problem_name, int exit_flag);
 void add_problem_to_data(FileData *data, int times_played, int grid[GRID_SIZE][GRID_SIZE]);
 void write_problem_to_file(FileData *data);
+void update_problem_in_file(FileData *data, int index);
+void process_problem_line(FileData *data, char *buffer, FILE *temp, int index);
 
 #endif

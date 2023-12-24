@@ -13,8 +13,12 @@ int validate_user_input(char *input, int max_value, int min_value);
 void clear_input_buffer(char *input);
 void clear_screen();
 
-void get_unique_problem_name(FileData *data);
+void get_unique_problem_name(FileData *data, int index);
+void update_problem_name(FileData *data, char *problem_name, int index);
 void get_sudoku_grid(FileData *data);
 int get_valid_cell(int row, int col);
+
+int get_problem_index(FileData *data);
+void get_problem_name(char *problem_name, int size);
 
 #endif

@@ -10,9 +10,15 @@
 #include <stdio.h>
 
 void add_new_problem(FileData *data) {
-    get_unique_problem_name(data);
+    get_unique_problem_name(data, -1);
     get_sudoku_grid(data);
     write_problem_to_file(data);
+}
+
+void rename_problem(FileData *data) {
+    int index = get_problem_index(data);
+    get_unique_problem_name(data, index);
+    update_problem_in_file(data, index);
 }
 
 void main_loop(FileData *data) {
@@ -26,7 +32,7 @@ void main_loop(FileData *data) {
                 add_new_problem(data);
                 break;
             case 3:
-                // implement rename_problem function
+                rename_problem(data);
                 break;
             case 4:
                 // implement view_statistics function

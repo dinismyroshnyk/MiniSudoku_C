@@ -47,7 +47,7 @@ char *read_line(FileData *data, char *buffer, int buffer_size) {
 }
 
 void generate_data_file() {
-    FILE *file = fopen("../data.txt", "r");
+    FILE *file = open_file("../data.txt", "r");
     if(file) fclose(file);
     else {
         file = fopen("../data.txt", "w");
@@ -110,7 +110,7 @@ void validate_problems(FileData *data) {
         if (sscanf(trimmed, "\"%[^\"]\" %d", problem_name, &times_played) != 2 || times_played < 0) {
             exit_error_message(data, "Invalid problem line.", -1, NULL);
         }
-        validate_problem_name(data, problem_name, 1);
+        if(validate_problem_name(data, problem_name, 1)) strcpy(data->problems[data->problem_count].name, problem_name);
         //printf("Debug: Problem name: '%s', Times played: %d\n", problem_name, times_played);
         validate_problem_grid(data, grid);
         validate_sudoku_problem(data, grid);
@@ -190,7 +190,6 @@ int validate_problem_name(FileData *data, char *problem_name, int exit_flag) {
         }
         //printf("Debug: Problem name: '%s', Problem name in data: '%s'\n", problem_name, data->problems[i].name);
     }
-    strcpy(data->problems[data->problem_count].name, problem_name);
     return 1;
 }
 
@@ -212,4 +211,38 @@ void write_problem_to_file(FileData *data) {
         if (i < GRID_SIZE - 1) fprintf(file, "\n");
     }
     fclose(file);
+}
+
+void update_problem_in_file(FileData *data, int index) {
+    FILE *file = open_file("../data.txt", "r");
+    FILE *temp = open_file("../temp.txt", "w");
+    char buffer[FILE_BUFFER];
+    int curr_index = -1;
+    while(fgets(buffer, sizeof(buffer), file)) {
+        char *quote = strchr(buffer, '\"');
+        char *comment = strstr(buffer, "//");
+        if(comment && !quote) {
+            fprintf(temp, "%s", buffer);
+            continue;
+        }
+        if(quote) curr_index++;
+        if(curr_index == index && quote) {
+            process_problem_line(data, buffer, temp, index);
+        } else fprintf(temp, "%s", buffer);
+    }
+    fclose(file);
+    fclose(temp);
+    remove("../data.txt");
+    rename("../temp.txt", "../data.txt");
+}
+
+void process_problem_line(FileData *data, char *buffer, FILE *temp, int index) {
+    char *quote = strchr(buffer, '\"');
+    char *end_quote = strchr(quote+1, '\"');
+    if(end_quote) {
+        *quote = '\0';
+        fprintf(temp, "%s\"%s\"", buffer, data->problems[index].name);
+        *quote = '\"';
+        fprintf(temp, "%s", end_quote + 1);
+    }
 }
