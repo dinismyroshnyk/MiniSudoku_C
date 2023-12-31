@@ -6,7 +6,7 @@
 
 #include "common.h"
 
-int menu(int max_value, int is_main_menu, GameState *game);
+int menu(int max_value, int is_main_menu, GameState *game, FileData *data);
 void main_menu_interface(int allowed_attempts);
 
 int validate_user_input(char *input, int max_value, int min_value);
@@ -28,5 +28,10 @@ int get_valid_input(const char *message, int is_index);
 void remove_number(int grid[GRID_SIZE][GRID_SIZE], int initial_grid[GRID_SIZE][GRID_SIZE]);
 void press_any_key_message(char *message);
 int check_win(int grid[GRID_SIZE][GRID_SIZE]);
+int check_problem_limit(FileData *data);
+void display_problem_names(FileData *data);
+void display_stats(FileData *data);
+void display_info_interface(FileData *data, int allowed_attempts);
+void display_problem_details(FileData *data);
 
 #endif

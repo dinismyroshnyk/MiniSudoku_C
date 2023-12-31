@@ -153,7 +153,8 @@ void exit_error_message(FileData *data, const char *message, int print_check, in
 FileData init_file_data(const char *filename) {
     FileData data;
     data.file = open_file(filename, "r");
-    data.line_number = data.games_played = data.games_won = data.success_rate = 0;
+    data.problem_count = data.line_number = 0;
+    data.games_played = data.games_won = data.success_rate = 0;
     return data;
 }
 

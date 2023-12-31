@@ -8,7 +8,7 @@
 # include <stdio.h>
 # include <string.h>
 
-int menu(int max_value, int is_main_menu, GameState *game) {
+int menu(int max_value, int menu_flag, GameState *game, FileData *data) {
     static int allowed_attempts = MAX_RECURSION_DEPTH;
     char input[4];
     int choice;
@@ -18,13 +18,25 @@ int menu(int max_value, int is_main_menu, GameState *game) {
         allowed_attempts = MAX_RECURSION_DEPTH;
         return max_value;
     }
-    if(is_main_menu) main_menu_interface(allowed_attempts);
-    else play_menu_interface(game, allowed_attempts);
+    switch(menu_flag) {
+        case 1:
+            main_menu_interface(allowed_attempts);
+            break;
+        case 2:
+            play_menu_interface(game, allowed_attempts);
+            break;
+        case 3:
+            display_info_interface(data, allowed_attempts);
+            break;
+        default:
+            printf("You should not be seeing this message. Please report this bug.\n");
+            break;
+    }
     fgets(input, sizeof(input), stdin);
     choice = validate_user_input(input, max_value, 1);
     if(choice == -1) {
         allowed_attempts--;
-        return menu(max_value, is_main_menu, game);
+        return menu(max_value, menu_flag, game, data);
     }
     allowed_attempts = MAX_RECURSION_DEPTH;
     return choice;
@@ -229,4 +241,47 @@ int check_win(int grid[GRID_SIZE][GRID_SIZE]) {
         }
     }
     return 1;
+}
+
+int check_problem_limit(FileData *data) {
+    if(data->problem_count >= MAX_PROBLEMS) {
+        press_any_key_message("You have reached the maximum number of problems. Cannot add more problems.");
+        return 1;
+    }
+    return 0;
+}
+
+void display_problem_names(FileData *data) {
+    printf("Existing problems:\n");
+    for(int i = 0; i < data->problem_count; i++) {
+        printf("%d. %s\n", i + 1, data->problems[i].name);
+    }
+}
+
+void display_stats(FileData *data) {
+    printf("Total games played: %d\n", data->games_played);
+    printf("Total games won: %d\n", data->games_won);
+    printf("Success rate: %.2f%%\n\n", (float)(data->success_rate) / 100);
+    display_problem_names(data);
+    printf("\n");
+}
+
+void display_info_interface(FileData *data, int allowed_attempts) {
+    clear_screen();
+    display_stats(data);
+    printf("1. View problem details\n");
+    printf("2. Return to main menu\n");
+    if(allowed_attempts == 1) printf("Your choice (last attempt): ");
+    else if (allowed_attempts < MAX_RECURSION_DEPTH) printf("Your choice (%d): ", allowed_attempts);
+    else printf("Your choice: ");
+}
+
+void display_problem_details(FileData *data) {
+    int index = get_problem_index(data);
+    clear_screen();
+    print_sudoku_grid(data->problems[index].grid);
+    printf("\nProblem name: %s\n", data->problems[index].name);
+    printf("Times played (total): %d\n", data->problems[index].times_played_total);
+    printf("Times played (session): %d\n", data->problems[index].times_played_session);
+    press_any_key_message("");
 }

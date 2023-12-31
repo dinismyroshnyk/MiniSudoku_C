@@ -20,12 +20,14 @@ GameState game_state_init(FileData *data, int index) {
 }
 
 void add_new_problem(FileData *data) {
+    if(check_problem_limit(data)) return;
     get_unique_problem_name(data, -1);
     get_sudoku_grid(data);
     write_problem_to_file(data);
 }
 
 void rename_problem(FileData *data) {
+    display_problem_names(data);
     int index = get_problem_index(data);
     get_unique_problem_name(data, index);
     update_data_in_file(data, index);
@@ -38,7 +40,7 @@ void play_sudoku(FileData *data, int *prev_index) {
     data->problems[index].times_played_total++;
     data->problems[index].times_played_session++;
     while(game.possible_errors > 0 && game.completed == 0) {
-        int choice = menu(3, 0, &game);
+        int choice = menu(3, 2, &game, NULL);
         switch(choice) {
             case 1:
                 place_number(&game, data);
@@ -59,9 +61,26 @@ void play_sudoku(FileData *data, int *prev_index) {
     update_data_in_file(data, index);
 }
 
+void display_info(FileData *data) {
+    display_stats(data);
+    while(1) {
+        int choice = menu(2, 3, NULL, data);
+        switch(choice) {
+            case 1:
+                display_problem_details(data);
+                break;
+            case 2:
+                return;
+            default:
+                printf("You should not be seeing this message. Please report this bug.\n");
+                break;
+        }
+    }
+}
+
 void main_loop(FileData *data, int *prev_index) {
     while(1) {
-        int choice = menu(5, 1, NULL);
+        int choice = menu(5, 1, NULL, NULL);
         switch(choice) {
             case 1:
                 play_sudoku(data, prev_index);
@@ -73,7 +92,7 @@ void main_loop(FileData *data, int *prev_index) {
                 rename_problem(data);
                 break;
             case 4:
-                // implement view_statistics function
+                display_info(data);
                 break;
             case 5:
                 printf("Exiting the program.\n");
