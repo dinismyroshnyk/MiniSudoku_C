@@ -3,22 +3,30 @@
 
 #include "../include/user_interface.h"
 #include "../include/file_operations.h"
+#include "../include/sudoku.h"
 
 # include <stdio.h>
 # include <string.h>
 
-int main_menu(int allowed_attempts) {
+int menu(int max_value, int is_main_menu, GameState *game) {
+    static int allowed_attempts = MAX_RECURSION_DEPTH;
     char input[4];
-    int choice, max_choice = 5, min_choice = 1;
+    int choice;
     if(allowed_attempts < 1) {
         clear_screen();
         printf("Too many invalid choices. ");
-        return max_choice;
+        allowed_attempts = MAX_RECURSION_DEPTH;
+        return max_value;
     }
-    main_menu_interface(allowed_attempts);
+    if(is_main_menu) main_menu_interface(allowed_attempts);
+    else play_menu_interface(game, allowed_attempts);
     fgets(input, sizeof(input), stdin);
-    choice = validate_user_input(input, max_choice, min_choice);
-    if(choice == -1) return main_menu(--allowed_attempts);
+    choice = validate_user_input(input, max_value, 1);
+    if(choice == -1) {
+        allowed_attempts--;
+        return menu(max_value, is_main_menu, game);
+    }
+    allowed_attempts = MAX_RECURSION_DEPTH;
     return choice;
 }
 
@@ -32,7 +40,7 @@ void main_menu_interface(int allowed_attempts) {
     printf("4. View statistics\n");
     printf("5. Exit\n");
     if(allowed_attempts == 1) printf("Your choice (last attempt): ");
-    else if (allowed_attempts < 5) printf("Your choice (%d): ", allowed_attempts);
+    else if (allowed_attempts < MAX_RECURSION_DEPTH) printf("Your choice (%d): ", allowed_attempts);
     else printf("Your choice: ");
 }
 
@@ -44,7 +52,7 @@ int validate_user_input(char *input, int max_value, int min_value) {
         clear_input_buffer(input);
         return -1;
     }
-    if (integer < min_value || integer > max_value) {
+    if(integer < min_value || integer > max_value) {
         printf("Invalid choice. Please enter a number between %d and %d. ", min_value, max_value);
         clear_input_buffer(input);
         return -1;
@@ -76,15 +84,13 @@ void get_unique_problem_name(FileData *data, int index) {
 }
 
 void update_problem_name(FileData *data, char *problem_name, int index) {
-    if(index == -1) {
-        strcpy(data->problems[data->problem_count].name, problem_name);
-        data->problem_count++;
-    } else strcpy(data->problems[index].name, problem_name);
+    if(index == -1) strcpy(data->problems[data->problem_count].name, problem_name);
+    else strcpy(data->problems[index].name, problem_name);
 }
 
 void get_sudoku_grid(FileData *data) {
     int grid[GRID_SIZE][GRID_SIZE], copy[GRID_SIZE][GRID_SIZE];
-    while (1) {
+    while(1) {
         printf("Enter the problem grid. ");
         for(int i = 0; i < GRID_SIZE; i++) {
             for(int j = 0; j < GRID_SIZE; j++) {
@@ -92,23 +98,21 @@ void get_sudoku_grid(FileData *data) {
             }
         }
         memcpy(copy, grid, GRID_SIZE * GRID_SIZE * sizeof(int));
-        if (!is_initial_grid_valid(grid) || !solve_sudoku(grid, 0, 0)) {
+        if(!is_initial_grid_valid(grid) || !solve_sudoku(grid, 0, 0)) {
             printf("Invalid Sudoku puzzle. The problem is not solvable. Please try again.\n");
         } else break;
     }
-    memcpy(data->problems[data->problem_count].grid, copy, GRID_SIZE * GRID_SIZE * sizeof(int));
-    data->problems[data->problem_count].times_played_total = 0;
-    data->problem_count++;
+    add_problem_to_data(data, 0, copy);
 }
 
 int get_valid_cell(int row, int col) {
     char input[USER_BUFFER];
     int value;
-    while (1) {
+    while(1) {
         printf("(Row %d, Column %d): ", row + 1, col + 1);
         fgets(input, sizeof(input), stdin);
         value = validate_user_input(input, GRID_SIZE, MIN_DATA_VALUE);
-        if (value >= MIN_DATA_VALUE && value <= GRID_SIZE) break;
+        if(value >= MIN_DATA_VALUE && value <= GRID_SIZE) break;
     }
     return value;
 }
@@ -129,4 +133,100 @@ void get_problem_name(char *problem_name, int size) {
     fgets(problem_name, size, stdin);
     clear_input_buffer(problem_name);
     if(problem_name[strlen(problem_name) - 1] == '\n') problem_name[strlen(problem_name) - 1] = '\0';
+}
+
+void print_sudoku_grid(int grid[GRID_SIZE][GRID_SIZE]) {
+    printf("      1   2   3   4\n\n");
+    for(int i = 0; i < GRID_SIZE; i++) {
+        printf("    +---+---+---+---+\n");
+        printf("%d   |", i + 1);
+        for(int j = 0; j < GRID_SIZE; j++) {
+            if(grid[i][j] == 0) printf("   |");
+            else printf(" %d |", grid[i][j]);
+        }
+        printf("\n");
+    }
+    printf("    +---+---+---+---+\n");
+}
+
+void play_menu_interface(GameState *game, int allowed_attempts) {
+    clear_screen();
+    printf("    %s\n\n", game->problem_name);
+    print_sudoku_grid(game->grid);
+    printf("\nPossible errors left: %d\n", game->possible_errors);
+    printf("\n1. Place number\n");
+    printf("2. Remove number\n");
+    printf("3. Forfeit game\n\n");
+    if(allowed_attempts == 1) printf("Your choice (last attempt): ");
+    else if (allowed_attempts < MAX_RECURSION_DEPTH) printf("Your choice (%d): ", allowed_attempts);
+    else printf("Your choice: ");
+}
+
+void place_number(GameState *game, FileData *data) {
+    int row = get_valid_input("Enter the row", 1);
+    int col = get_valid_input("Enter the column", 1);
+    if(game->grid[row][col] != 0) {
+        press_any_key_message("The cell is already filled.");
+        return;
+    }
+    int value = get_valid_input("Enter the value", 0);
+    if(!is_valid(game->grid, row, col, value)) {
+        game->possible_errors -= 1;
+        game->grid[row][col] = value;
+        press_any_key_message("Invalid move.");
+    } else {
+        game->grid[row][col] = value;
+        if(check_win(game->grid)) {
+            press_any_key_message("Congratulations! You have won the game.");
+            game->completed = 1;
+            data->games_won++;
+        }
+    }
+    if(game->possible_errors == 0) {
+        press_any_key_message("You have made too many mistakes. You have lost the game.");
+    }
+}
+
+int get_valid_input(const char *message, int is_index) {
+    char input[USER_BUFFER];
+    int value;
+    while(1) {
+        printf("%s (1-%d): ", message, GRID_SIZE);
+        fgets(input, sizeof(input), stdin);
+        if(is_index) value = validate_user_input(input, GRID_SIZE, 1) - 1;
+        else value = validate_user_input(input, GRID_SIZE, 1);
+        if(value >= 0) break;
+    }
+    return value;
+}
+
+void remove_number(int grid[GRID_SIZE][GRID_SIZE], int initial_grid[GRID_SIZE][GRID_SIZE]) {
+    int row = get_valid_input("Enter the row", GRID_SIZE);
+    int col = get_valid_input("Enter the column", GRID_SIZE);
+    if(initial_grid[row][col] == 0) grid[row][col] = 0;
+    else if(grid[row][col] == 0) {
+        printf("The cell is already empty.\n");
+        printf("Press any key to continue... ");
+        getchar();
+    }
+    else {
+        printf("You cannot remove this number.\n");
+        printf("Press any key to continue... ");
+        getchar();
+    }
+}
+
+void press_any_key_message(char *message) {
+    printf("%s\n", message);
+    printf("Press any key to continue... ");
+    getchar();
+}
+
+int check_win(int grid[GRID_SIZE][GRID_SIZE]) {
+    for(int i = 0; i < GRID_SIZE; i++) {
+        for(int j = 0; j < GRID_SIZE; j++) {
+            if(grid[i][j] == 0) return 0;
+        }
+    }
+    return 1;
 }

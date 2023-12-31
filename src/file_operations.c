@@ -26,7 +26,7 @@ void check_int_range(FileData *data, int value, int max, const char *message) {
 
 void check_success_rate(FileData *data, int value, int max, const char *message) {
     int calculated_success_rate = (int)((float)data->games_won / (float)data->games_played * 10000);
-    if (calculated_success_rate != value) {
+    if(calculated_success_rate != value) {
         message = "Mismatching success rate. Should be";
         exit_error_message(data, message, calculated_success_rate, NULL);
     } else if (value < MIN_DATA_VALUE || value > max) exit_error_message(data, message, -1, NULL);
@@ -107,7 +107,7 @@ void validate_problems(FileData *data) {
     int times_played, grid[GRID_SIZE][GRID_SIZE], games_played_across_problems = 0;
     while((trimmed = read_line(data, buffer, sizeof(buffer))) != NULL) {
         //printf("Debug: Problem line after removing comments and trimming: '%s'\n", trimmed);
-        if (sscanf(trimmed, "\"%[^\"]\" %d", problem_name, &times_played) != 2 || times_played < 0) {
+        if(sscanf(trimmed, "\"%[^\"]\" %d", problem_name, &times_played) != 2 || times_played < 0) {
             exit_error_message(data, "Invalid problem line.", -1, NULL);
         }
         if(validate_problem_name(data, problem_name, 1)) strcpy(data->problems[data->problem_count].name, problem_name);
@@ -174,7 +174,7 @@ void validate_total_games_across_problems(FileData *data, int games_played_acros
 void validate_sudoku_problem(FileData *data, int grid[GRID_SIZE][GRID_SIZE]) {
     int copy[GRID_SIZE][GRID_SIZE];
     memcpy(copy, grid, sizeof(int) * GRID_SIZE * GRID_SIZE);
-    if (!is_initial_grid_valid(copy) || !solve_sudoku(copy, 0, 0)) {
+    if(!is_initial_grid_valid(copy) || !solve_sudoku(copy, 0, 0)) {
         exit_error_message(data, "Invalid Sudoku puzzle", -2, NULL);
     }
 }
@@ -213,36 +213,122 @@ void write_problem_to_file(FileData *data) {
     fclose(file);
 }
 
-void update_problem_in_file(FileData *data, int index) {
-    FILE *file = open_file("../data.txt", "r");
-    FILE *temp = open_file("../temp.txt", "w");
+int is_stats_line(char *buffer) {
+    int games_played, games_won;
+    float success_rate;
+    if(sscanf(buffer, "%d %d %f", &games_played, &games_won, &success_rate) == 3) {
+        return 1;
+    }
+    return 0;
+}
+
+void write_updated_stats(FileUpdate *update, char *buffer) {
+    char *ptr = buffer;
+    int read_stats = 0;
+    while(*ptr) {
+        if(isdigit(*ptr)) {
+            switch(read_stats) {
+                case 0:
+                    fprintf(update->temp, "%d", update->data->games_played);
+                    ptr = strpbrk(ptr, " \n");
+                    read_stats++;
+                    break;
+                case 1:
+                    fprintf(update->temp, "%d", update->data->games_won);
+                    ptr = strpbrk(ptr, " \n");
+                    read_stats++;
+                    break;
+                case 2:
+                    fprintf(update->temp, "%.2f", (float)(update->data->success_rate) / 100);
+                    ptr = strpbrk(ptr, " \n");
+                    read_stats++;
+                    break;
+            }
+        } else {
+            fputc(*ptr, update->temp);
+            ptr++;
+        }
+    }
+}
+
+void update_general_stats(FileUpdate *update) {
+    char buffer[FILE_BUFFER];
+    while(fgets(buffer, sizeof(buffer), update->file)) {
+        if(is_stats_line(buffer)) {
+            write_updated_stats(update, buffer);
+            while(fgetc(update->file) != '\n') fputc(fgetc(update->file), update->temp);
+            fputc('\n', update->temp);
+            break;
+        } else fprintf(update->temp, "%s", buffer);
+    }
+}
+
+int is_problem_header(char *buffer) {
+    char *quote = strstr(buffer, "\"");
+    if(quote) {
+        char *comment = strstr(buffer, "//");
+        if(!comment || quote < comment) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void write_problem(FileUpdate *update, char *buffer) {
+    write_updated_header(update, buffer);
+    while(fgets(buffer, FILE_BUFFER, update->file)) {
+        fprintf(update->temp, "%s", buffer);
+    }
+}
+
+void update_problem_header(FileUpdate *update) {
     char buffer[FILE_BUFFER];
     int curr_index = -1;
-    while(fgets(buffer, sizeof(buffer), file)) {
-        char *quote = strchr(buffer, '\"');
-        char *comment = strstr(buffer, "//");
-        if(comment && !quote) {
-            fprintf(temp, "%s", buffer);
-            continue;
+    while(fgets(buffer, sizeof(buffer), update->file)) {
+        if(is_problem_header(buffer)) {
+            curr_index++;
+            if(curr_index == update->index) {
+                write_problem(update, buffer);
+                break;
+            }
         }
-        if(quote) curr_index++;
-        if(curr_index == index && quote) {
-            process_problem_line(data, buffer, temp, index);
-        } else fprintf(temp, "%s", buffer);
+        fprintf(update->temp, "%s", buffer);
     }
-    fclose(file);
-    fclose(temp);
+}
+
+void update_data_in_file(FileData *data, int index) {
+    FileUpdate update = init_file_update(data, index);
+    update_general_stats(&update);
+    update_problem_header(&update);
+    fclose(update.file);
+    fclose(update.temp);
     remove("../data.txt");
     rename("../temp.txt", "../data.txt");
 }
 
-void process_problem_line(FileData *data, char *buffer, FILE *temp, int index) {
-    char *quote = strchr(buffer, '\"');
-    char *end_quote = strchr(quote+1, '\"');
-    if(end_quote) {
-        *quote = '\0';
-        fprintf(temp, "%s\"%s\"", buffer, data->problems[index].name);
-        *quote = '\"';
-        fprintf(temp, "%s", end_quote + 1);
+void write_updated_header(FileUpdate *update, char *buffer) {
+    char *ptr = buffer;
+    while(*ptr) {
+        if(*ptr == '\"') {
+            ptr++;
+            ptr = strpbrk(ptr, "\"");
+            fprintf(update->temp, "\"%s\"", update->data->problems[update->index].name);
+            ptr++;
+        } else if(isdigit(*ptr)) {
+            ptr = strpbrk(ptr, " \n");
+            fprintf(update->temp, "%d", update->data->problems[update->index].times_played_total);
+        } else {
+            fputc(*ptr, update->temp);
+            ptr++;
+        }
     }
+}
+
+FileUpdate init_file_update(FileData *data, int index) {
+    FileUpdate update;
+    update.file = open_file("../data.txt", "r");
+    update.temp = open_file("../temp.txt", "w");
+    update.data = data;
+    update.index = index;
+    return update;
 }

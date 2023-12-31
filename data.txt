@@ -6,7 +6,8 @@
          
 
      // this is a comment, it will be ignored by the program
-6 5 83.33  // total number of games played, number of games won, success rate
+// 6  5    83.33  // fake statistics line to test the program
+                         6 5          83.33    // total number of games played, number of games won, success rate
 
 
 

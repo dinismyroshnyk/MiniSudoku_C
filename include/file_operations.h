@@ -6,15 +6,7 @@
 
 #include <stdio.h>
 
-#include "constants.h"
-#include "sudoku.h"
-
-typedef struct {
-    FILE *file;
-    int games_played, games_won, success_rate;
-    int line_number, problem_count;
-    SudokuProblem problems[MAX_PROBLEMS];
-} FileData;
+#include "common.h"
 
 void generate_data_file();
 FileData validate_data_file();
@@ -34,7 +26,14 @@ char *trim(char *str);
 int validate_problem_name(FileData *data, char *problem_name, int exit_flag);
 void add_problem_to_data(FileData *data, int times_played, int grid[GRID_SIZE][GRID_SIZE]);
 void write_problem_to_file(FileData *data);
-void update_problem_in_file(FileData *data, int index);
-void process_problem_line(FileData *data, char *buffer, FILE *temp, int index);
+void update_general_stats(FileUpdate *update);
+void update_problem_header(FileUpdate *update);
+void update_data_in_file(FileData *data, int index);
+void write_updated_header(FileUpdate *update, char *buffer);
+int is_problem_header(char *buffer);
+void write_problem(FileUpdate *update, char *buffer);
+int is_stats_line(char *buffer);
+void write_updated_stats(FileUpdate *update, char *buffer);
+FileUpdate init_file_update(FileData *data, int index);
 
 #endif
