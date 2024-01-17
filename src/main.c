@@ -4,7 +4,6 @@
 #include "../include/common.h"
 #include "../include/file_operations.h"
 #include "../include/sudoku.h"
-#include "../include/statistics.h"
 #include "../include/user_interface.h"
 
 #include <stdio.h>
@@ -53,7 +52,7 @@ void play_sudoku(FileData *data, int *prev_index) {
                 game.completed = 1;
                 break;
             default:
-                printf("You should not be seeing this message. Please report this bug.\n");
+                press_any_key_message("You should not be seeing this message. Please report this bug.");
                 break;
         }
     }
@@ -72,7 +71,7 @@ void display_info(FileData *data) {
             case 2:
                 return;
             default:
-                printf("You should not be seeing this message. Please report this bug.\n");
+                press_any_key_message("You should not be seeing this message. Please report this bug.");
                 break;
         }
     }
@@ -98,7 +97,7 @@ void main_loop(FileData *data, int *prev_index) {
                 printf("Exiting the program.\n");
                 return;
             default:
-                printf("You should not be seeing this message. Please report this bug.\n");
+                press_any_key_message("You should not be seeing this message. Please report this bug.");
                 break;
         }
     }

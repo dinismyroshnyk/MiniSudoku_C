@@ -29,7 +29,7 @@ int menu(int max_value, int menu_flag, GameState *game, FileData *data) {
             display_info_interface(data, allowed_attempts);
             break;
         default:
-            printf("You should not be seeing this message. Please report this bug.\n");
+            press_any_key_message("You should not be seeing this message. Please report this bug.");
             break;
     }
     fgets(input, sizeof(input), stdin);
@@ -83,8 +83,7 @@ void clear_screen() {
 void get_unique_problem_name(FileData *data, int index) {
     char problem_name[USER_BUFFER];
     while(1) {
-        clear_screen();
-        printf("Problem name: ");
+        printf("New problem name: ");
         fgets(problem_name, sizeof(problem_name), stdin);
         clear_input_buffer(problem_name);
         if(problem_name[strlen(problem_name) - 1] == '\n') problem_name[strlen(problem_name) - 1] = '\0';
@@ -252,6 +251,7 @@ int check_problem_limit(FileData *data) {
 }
 
 void display_problem_names(FileData *data) {
+    clear_screen();
     printf("Existing problems:\n");
     for(int i = 0; i < data->problem_count; i++) {
         printf("%d. %s\n", i + 1, data->problems[i].name);
